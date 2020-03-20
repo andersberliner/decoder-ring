@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Hide the virtual environment
+decoder/*
+
 # C extensions
 *.so
 

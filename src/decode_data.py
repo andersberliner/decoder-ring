@@ -65,6 +65,9 @@ def seed_data(filepath, ndpts, dtypes=None, starting_bytes=None, packet_length=P
     with open(filepath, "rb") as f:
         byte_stream = f.read()
 
+    if knowns is None:
+        knowns = {}
+
     data = []
 
     for n in range(1, ndpts + 1):
