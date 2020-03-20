@@ -37,37 +37,62 @@ PACKET_MAP = {
     },
 }
 
+# Bytes indicating the end of the header, start of the data
+START_BYTES = bytearray([170, 170, 1])
 
-# Dictionary of data-type short cuts to their `to_bytes` args
-DATA_TYPES = {
-    # -128 to 127
-    "int8le": (1, {"byteorder": "little", "signed": True}),
-    "int8be": (1, {"byteorder": "little", "signed": True}),
-    # 0 to 255
-    "uint8le": (1, {"byteorder": "little", "signed": False}),
-    "uint8be": (1, {"byteorder": "little", "signed": False}),
-    # -32,768 to 32,767
-    "int16le": (2, {"byteorder": "little", "signed": True}),
-    "int16be": (2, {"byteorder": "little", "signed": True}),
-    # 0 to 65,535
-    "uint16le": (2, {"byteorder": "little", "signed": False}),
-    "uint16be": (2, {"byteorder": "little", "signed": False}),
-    # -2,147,483,648 to 2,147,483,647
-    "int32le": (4, {"byteorder": "little", "signed": True}),
-    "int32be": (4, {"byteorder": "little", "signed": True}),
-    # 0 to 4,294,967,295
-    "uint32le": (4, {"byteorder": "little", "signed": False}),
-    "uint32be": (4, {"byteorder": "little", "signed": False}),
-    # -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807
-    "int64le": (8, {"byteorder": "little", "signed": True}),
-    "int64be": (8, {"byteorder": "little", "signed": True}),
-    # 0 to 18,446,744,073,709,551,615
-    "uint64le": (8, {"byteorder": "little", "signed": False}),
-    "uint64be": (8, {"byteorder": "little", "signed": False}),
-}
+# Characters provided for each header field.
+HEADER_CHAR_LIMIT = 25
+
+VERSION = "Acme v1.0"
 
 
-HEADER = "{}\n{}\n{}\n".format("Acme v1.0".ljust(25), "sample_data.unk".ljust(25), "2020-03-19 10:00:00".ljust(25))
+def _generate_header_str(version_string, filename, start_time,
+        char_limit=HEADER_CHAR_LIMIT):
+    """Returns header-str for a given file, including test metadata.
+
+    Parameters
+    ----------
+    version_string : str
+        Encoding version number.
+    filename : str
+        Name of file data is written too.
+    start_time : datetime.datetime
+        Datetime of first datapoint.
+    char_limit : int
+        White-space padding of header fields.
+
+    Returns
+    -------
+    header_str : str
+    """
+    return "{}\n{}\n{}\n".format(
+        version_string.ljust(char_limit),
+        filename.ljust(char_limit),
+        start_time.strftime("%Y-%m-%d %H:%M:%S").ljust(char_limit)
+    )
 
 
-HEADER_BYTES = bytes(HEADER, encoding="utf-8") + bytearray([170, 170, 1])
+def get_header_bytes(filename, start_time,
+        char_limit=HEADER_CHAR_LIMIT, start_bytes=START_BYTES,
+        version_string=VERSION):
+    """Returns header-bytes for a given file; encodes test metadata.
+
+    Parameters
+    ----------
+    filename : str
+        Name of file data is written too.
+    start_time : datetime.datetime
+        Datetime of first datapoint.
+    char_limit : int
+        White-space padding of header fields.
+    start_bytes : bytearray
+        List of bytes indicating the end of the header, start of the data.
+    version_string : str
+        Encoding version number.
+
+    Returns
+    -------
+    header_bytes : byte str
+    """
+    return bytes(_generate_header_str(version_string, filename, start_time,
+            char_limit=char_limit), encoding="utf-8") + start_bytes
