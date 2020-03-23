@@ -4,11 +4,14 @@ Module to write data to file
 import os
 import datetime
 from dateutil.parser import parse
+import numpy as np
 
 # Local imports
-from .lib import DecoderRingError, DATA_TYPES
+from .lib import DecoderRingError, DATA_TYPES, cast_to_bytes
 from .packet_map import PACKET_MAP, get_header_bytes
 from .sample_data import create_data
+
+DT = parse("20200317 10:00:00")
 
 
 def encode_data(filepath, df, start_time, packet_map=PACKET_MAP):
@@ -46,20 +49,12 @@ def encode_data(filepath, df, start_time, packet_map=PACKET_MAP):
     with open(filepath, "wb") as f:
         f.write(header_bytes)
         for _, row in df.iterrows():
-            for byte_pos, byte_dict in PACKET_MAP.items():
-                try:
-                    byte_count, byte_kwargs = DATA_TYPES.get(byte_dict["dtype"])
-                except KeyError:
-                    raise DecoderRingError(
-                        (
-                            'Byte position "{}" has invalid data type "{}".'
-                        ).format(byte_pos, byte_dict.get("dtype"))
-                    )
-
+            for _, byte_dict in PACKET_MAP.items():
                 f.write(
-                    int(
-                        row[byte_dict["label"]] * byte_dict.get("factor", 1)
-                    ).to_bytes(byte_count, **byte_kwargs)
+                    cast_to_bytes(
+                        row[byte_dict["label"]] * byte_dict.get("factor", 1),
+                        byte_dict["dtype"]
+                    )
                 )
 
 
@@ -70,7 +65,8 @@ def main(dt=None):
     """
     if dt is None:
         dt = datetime.datetime.now()
-    filepath = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "sample.unk"))
+    filepath = os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
+            "sample.unk"))
 
     encode_data(filepath, create_data(), dt)
 
@@ -78,4 +74,4 @@ def main(dt=None):
 
 
 if __name__ == "__main__":
-    main(parse("20200317 10:00:00"))
+    main(DT)

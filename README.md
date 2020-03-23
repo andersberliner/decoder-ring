@@ -67,16 +67,16 @@ The sample data is encoded according to the rules laid-forth in `packet_map`:
 
 To experiment with decoding data (i.e. from `sample.unk`), use the `decode_data` module.
 
-First, see a dataframe with the scope of the parameters you want to investigate.
+Create a `DataDecoder` object, which will be seeded on initialization:
 
 ```python
-from src import decode_data
+from src.decode_data import DataDecoder, PACKET_LENGTH
 
-seed_df = decode_data.seed_data(
+decoder = DataDecoder(
     "sample.unk",
-    4,
+    ndpts=4,
     starting_bytes=[0,1,2],
-    packet_length=decode_data.PACKET_LENGTH,
+    packet_length=PACKET_LENGTH,
     # Keep this empty to "start-fresh"
     knowns=None,
 )
@@ -85,18 +85,42 @@ seed_df = decode_data.seed_data(
 To view, for example, byte position 9 in a sub-sample of data-types, with the first byte reserved as a _starting byte_:
 
 ```python
-decode_data.view_byte_position(
-    seed_df,
-    9,
-    1,
-    ["uint16le", "uint16be", "uint32le", "uint32be"])
+DataDecoder.view_byte_idx(9, 1, ["uint16le", "uint16be", "uint32le", "uint32be"])
+```
+
+To view the full set of packets with starting_byte 1, try:
+
+```python
+DataDecoder.view_dtypes(1, ["uint16le", "uint16be", "uint32le", "uint32be"])
+```
+
+If you have a guess of a data-type and want to grab the full-set of data, you
+will need to either specify the number of datapoints expected in the file, or
+make sure the `knowns` you pass in on initialization includes the correct dpt
+position (1, uint32le in `sample.unk`).  Then you can, for example, to
+investigate byte 5 as a little-endian short (i.e. 16 bit), you would:
+
+```python
+DataDecoder.decode_byte_idx(byte_idx=5, dtype="uint16le")
+```
+
+And to see all the data in your knowns (with the same dpt caveat as before):
+
+```python
+DataDecoder.decode_knowns()
+```
+
+Add the "actual" csv as an arg to include that data as well for comparison:
+
+```python
+DataDecode.decode_knowns("sample.csv")
 ```
 
 Currently, in the `KNOWNS` static variable in `decode_data`, I have included a few bytes (see `src.packet_map.PACKET_MAP` for the official map).  You can update as you go to "fill-in" the byte-packet.
 
 ## Tests
 
-Coverage will be extended shortly, but to run all tests, do the following:
+To run all tests, do the following:
 
 ```
 # Activate virtualenv if you haven't already
@@ -105,3 +129,5 @@ source decoder/bin/activate
 # Run the tests
 python -m pytest -s -vv tests/
 ```
+
+General-use fixtures are found in `tests/fixtures`.

@@ -6,7 +6,6 @@ import pandas as pd
 import pytest
 from collections import namedtuple
 
-# Relative imports
 from src import sample_data
 
 
@@ -54,8 +53,8 @@ def small_sample_data():
         (1, 2, np.array([2, 3])),
     ]
 )
-def test_get_step_dpt_data(last_val,ndpts,expected):
-    """Tests the _get_step_dpt_data - for building dpt vals in a step."""
+def test_get_step_dpt_data(last_val, ndpts, expected):
+    """Tests the _get_step_dpt_data method. - for building dpt vals in a step."""
     assert (sample_data._get_step_dpt_data(last_val, ndpts) == expected).all()
 
 
