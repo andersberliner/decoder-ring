@@ -8,7 +8,7 @@ import pytest
 from src import lib
 
 
-
+# fmt: off
 @pytest.mark.parametrize(
     "dtype,expected",
     [
@@ -23,6 +23,9 @@ def test_get_nbytes(dtype, expected):
     assert lib.get_nbytes(dtype) == expected
 
 
+# fmt: on
+
+
 def test_get_nbytes__bad_dtype():
     """Tests the get_nbytes method raises an error when invalid dtype is used."""
     with pytest.raises(lib.DecoderRingError):
@@ -30,6 +33,7 @@ def test_get_nbytes__bad_dtype():
         assert False, "DecoderRingError should have been raised."
 
 
+# fmt: off
 @pytest.mark.parametrize(
     "byte_list,dtype,expected",
     [
@@ -64,6 +68,8 @@ def test_cast_from_bytes(byte_list, dtype, expected):
     """Tests the cast_from_bytes method."""
     assert lib.cast_from_bytes(byte_list, dtype) == expected
 
+# fmt: on
+
 
 def test_cast_from_bytes__bad_dtype():
     """Tests the cast_from_bytes method raises an error when invalid dtype is used."""
@@ -72,6 +78,7 @@ def test_cast_from_bytes__bad_dtype():
         assert False, "DecoderRingError should have been raised."
 
 
+# fmt: off
 @pytest.mark.parametrize(
     "data,dtype,expected",
     [
@@ -105,6 +112,9 @@ def test_cast_from_bytes__bad_dtype():
 def test_cast_to_bytes(data, dtype, expected):
     """Tests the cast_to_bytes method."""
     assert lib.cast_to_bytes(data, dtype) == expected
+
+
+# fmt: on
 
 
 def test_cast_to_bytes__bad_dtype():
