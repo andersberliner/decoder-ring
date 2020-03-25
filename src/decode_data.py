@@ -43,7 +43,7 @@ class DataDecoder(object):
             packet_length=PACKET_LENGTH, knowns=KNOWNS, dpt_index=DPT_INDEX):
         """Initializes the DataDecoder object, including seeding the data."""
         self._packet_length = packet_length
-        self._knowns = knowns
+        self._knowns = knowns if knowns is not None else {}
         self._dpt_idx = dpt_index
         self._filepath = filepath
         self._filename = os.path.split(filepath)[1]
@@ -61,13 +61,13 @@ class DataDecoder(object):
 
         # Determine the maximum number of data-points in the file.
         self._max_dpts = None
-        if dpt_index in knowns:
+        if (dpt_index is not None) and (dpt_index in self._knowns):
             sbyte, dtype, n, _ = self._seed_df.index.min()
             self._max_dpts = self._seed_df.loc[sbyte, dtype, 1, dpt_index].iloc[0]
 
         # Find the known labels
         self._known_labels = {byte_dict["label"]: byte_idx for
-                byte_idx, byte_dict in knowns.items()}
+                byte_idx, byte_dict in self._knowns.items()}
 
     def decode_byte_idx(self, byte_idx=None, dtype=None, label=None, dpts=None):
         """Decodes all data in the file at specified byte in specified datatype.
@@ -338,7 +338,7 @@ def seed_data(filepath, ndpts, dtypes=None, starting_bytes=None,
                     tmp_df["n"] = n
                     tmp_df["dtype"] = dtype
 
-                data.append(tmp_df)
+                    data.append(tmp_df)
 
     df = pd.concat(data)
     df.index.name = "idx"
@@ -371,7 +371,7 @@ def view_byte_idx(seed_df, byte_idx, starting_byte, dtypes=None):
     if dtypes is None:
         dtypes = seed_df.index.get_level_values("dtype").unique()
 
-    return seed_df.loc[pd.IndexSlice[starting_byte, :, :, byte_idx], :]\
+    return seed_df.loc[pd.IndexSlice[starting_byte, dtypes, :, byte_idx], :]\
         .reset_index()\
         .pivot(index="dtype", columns="n", values="val")\
         .T[dtypes]\
@@ -487,8 +487,9 @@ def decode_packet(packet, dtype, starting_byte, packet_length=PACKET_LENGTH,
 
     Returns
     -------
-    packet_df : pd.DataFrame
+    packet_df : dict
         Data from `packet` decoded into `dtype` (or knowns).
+        Byte idx => {label: label (str), val: val (various)}
     """
     nbytes = get_nbytes(dtype)
 
@@ -543,6 +544,9 @@ def fill_known_bytes(packet, knowns, packet_length=PACKET_LENGTH):
         Byte_idx to dict of:
             {"val": value in appropriate type, "label": column label}
     """
+    if knowns is None:
+        knowns = {}
+
     decoded_packet = {i: {"val": None, "label": None} for i in
             range(packet_length)}
 
@@ -578,6 +582,8 @@ def _get_known_bytes(knowns, packet_length=PACKET_LENGTH):
     known_bytes : list of int
         Index of bytes populated by 'known' values.
     """
+    if knowns is None:
+        knowns = {}
     known_bytes = []
 
     for known, known_dict in knowns.items():
